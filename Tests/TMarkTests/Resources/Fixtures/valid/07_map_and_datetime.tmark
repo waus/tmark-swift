@@ -1,0 +1,6 @@
+{document;
+#url{map}
+#title{Map}
+{map;#lat{55.75}#lon{37.61}#zoom{10}#caption{Moscow}}
+{p;At {datetime;#timezone{Europe/Moscow}1782680400}}
+}

@@ -1,0 +1,22 @@
+{document;
+#url{https://example.com/tmark}
+#title{Tables}
+{h;#s{2}Tables}
+{table;
+#caption{Simple striped table}
+#striped{t}
+{{#header{t}Quarter}{#header{t}#align{right}Revenue}{#header{t}Status}}
+{{Q1}{#align{right}$12,400}{closed}}
+{{Q2}{#align{right}$11,400}{closed}}
+{{Q3}{#align{right}$22,000}{closed}}
+{{Q4}{#align{right}$15,100}{forecast}}
+}
+{table;
+#caption{Colspan, rowspan, align and valign}
+#bordered{t}
+{{#header{t}#colspan{3}Merged header}}
+{{#valign{top}Left}{#align{center}Center}{#align{right}Right}}
+{{#rowspan{2}Tall}{A}{B}}
+{{C}{D}}
+}
+}

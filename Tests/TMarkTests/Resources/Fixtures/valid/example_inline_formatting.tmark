@@ -1,0 +1,7 @@
+{document;
+#url{https://example.com/tmark}
+#title{Inline formatting}
+{h;#s{2}Inline formatting}
+{p;Nested: {b;{i;{u;bold italic underline}}}; hidden: {spoiler;spoiler}; chemistry: H{sub;2}O; power: x{sup;2}.}
+{p;{a;#href{https://example.com/docs}Docs} and {anchor-link;#name{formatting-notes}local anchor} can be mixed with {code;code} and {math;a^2+b^2=c^2}.}
+}

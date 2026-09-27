@@ -1,0 +1,10 @@
+{document;
+#url{pre}
+#title{Preformatted}
+{pre;
+#language{go}
+func main() \{
+	println("hi")
+\}
+}
+}

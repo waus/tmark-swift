@@ -1,0 +1,16 @@
+{document;
+#url{https://example.com/tmark}
+#title{Edge empty blocks}
+{h;#s{2}Edge: empty blocks}
+{p;}
+{list;
+}
+{table;
+}
+{details;#summary{Empty details}#open{t}}
+{collage;
+}
+{slideshow;
+}
+{hr;}
+}

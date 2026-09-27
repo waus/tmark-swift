@@ -1,0 +1,45 @@
+{document;
+#url{https://tmark.waus.app/examples/media_formats.tmark}
+#title{Media formats}
+{p;Required formats must work in conforming tmark renderers. Unsupported examples are outside the required set; implementations may support them as extensions. Browser previews are not a conformance test.}
+{h;#s{2}MUST supported}
+{h;#s{3}JPEG}
+{img;#caption{JPEG}https://tmark.waus.app/static/media-formats/image.jpg}
+{h;#s{3}WebP}
+{img;#caption{WebP}https://tmark.waus.app/static/media-formats/image.webp}
+{h;#s{3}AVIF}
+{img;#caption{AVIF}https://tmark.waus.app/static/media-formats/image.avif}
+{h;#s{3}PNG}
+{img;#caption{PNG}https://tmark.waus.app/static/media-formats/image.png}
+{h;#s{3}JPEG XL}
+{img;#caption{JPEG XL}https://tmark.waus.app/static/media-formats/image.jxl}
+{h;#s{3}Lottie JSON}
+{img;#caption{Lottie JSON}https://tmark.waus.app/static/media-formats/animation.json}
+{h;#s{3}MP3 / native MP3}
+{audio;#caption{MP3 / native MP3}https://tmark.waus.app/static/media-formats/tone.mp3}
+{h;#s{3}FLAC / native FLAC}
+{audio;#caption{FLAC / native FLAC}https://tmark.waus.app/static/media-formats/tone.flac}
+{h;#s{3}Opus / Ogg}
+{audio;#caption{Opus / Ogg}https://tmark.waus.app/static/media-formats/tone-opus.ogg}
+{h;#s{3}AAC-LC / ISO BMFF (MP4)}
+{audio;#caption{AAC-LC / ISO BMFF (MP4)}https://tmark.waus.app/static/media-formats/tone-aac-lc.m4a}
+{h;#s{2}Unsupported}
+{h;#s{3}GIF}
+{img;#caption{GIF}https://tmark.waus.app/static/media-formats/image.gif}
+{h;#s{3}BMP}
+{img;#caption{BMP}https://tmark.waus.app/static/media-formats/image.bmp}
+{h;#s{3}TIFF}
+{img;#caption{TIFF}https://tmark.waus.app/static/media-formats/image.tiff}
+{h;#s{3}PCM / WAV}
+{audio;#caption{PCM / WAV}https://tmark.waus.app/static/media-formats/tone.wav}
+{h;#s{3}Vorbis / Ogg}
+{audio;#caption{Vorbis / Ogg}https://tmark.waus.app/static/media-formats/tone-vorbis.ogg}
+{h;#s{3}AAC-LC / ADTS (wrong container)}
+{audio;#caption{AAC-LC / ADTS (wrong container)}https://tmark.waus.app/static/media-formats/tone-aac-lc.aac}
+{h;#s{3}Opus / WebM (wrong container)}
+{audio;#caption{Opus / WebM (wrong container)}https://tmark.waus.app/static/media-formats/tone-opus.webm}
+{h;#s{3}FLAC / Ogg (wrong container)}
+{audio;#caption{FLAC / Ogg (wrong container)}https://tmark.waus.app/static/media-formats/tone-flac.ogg}
+{h;#s{3}HE-AAC / MP4 (wrong profile)}
+{audio;#caption{HE-AAC / MP4 (wrong profile)}https://tmark.waus.app/static/media-formats/tone-aac-he.m4a}
+}

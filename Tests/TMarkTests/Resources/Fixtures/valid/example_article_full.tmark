@@ -1,0 +1,26 @@
+{document;
+#url{https://example.com/tmark}
+#title{Structured article}
+{h;#s{1}Structured article}
+{p;This example combines article-like sections with media, references and links.}
+{img;#caption{Mountain panorama}https://tmark.waus.app/static/mountains-hero.webp}
+{h;#s{2}Overview}
+{p;The content model stays semantic while renderers choose the final visual treatment.}
+{h;#s{2}Checklist}
+{list;
+{#type{checkbox}#checked{t}{p;Use strict typed nodes}}
+{#type{checkbox}#checked{t}{p;Keep documents portable}}
+{#type{checkbox}#checked{f}{p;Avoid presentation controls}}
+}
+{h;#s{2}Data}
+{table;
+#bordered{t}
+{{#header{t}Format}{#header{t}Role}}
+{{tmark}{structured exchange}}
+{{HTML}{render target}}
+{{Markdown}{bridge format}}
+}
+{details;#summary{Implementation notes}{p;Additional implementation notes can live behind details.}}
+{h;#s{3}Links}
+{p;{a;#href{https://example.com/tmark}Project page}}
+}

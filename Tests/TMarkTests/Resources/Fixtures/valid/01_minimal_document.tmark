@@ -1,0 +1,5 @@
+{document;
+#url{minimal}
+#title{Minimal}
+{p;Hello {b;bold} and \#escaped\{text\}\\}
+}

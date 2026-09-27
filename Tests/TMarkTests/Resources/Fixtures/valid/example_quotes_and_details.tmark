@@ -1,0 +1,20 @@
+{document;
+#url{https://example.com/tmark}
+#title{Quotes and details}
+{h;#s{2}Quotes and details}
+{q;
+#credit{Example source}
+{p;A blockquote can contain several blocks.}
+{list;
+{{p;quoted list item}}
+}
+}
+{as;#credit{Editor}A compact aside for a highlighted thought.}
+{details;
+#summary{{b;Expanded section}}
+#open{t}
+{p;Hidden paragraph}
+{img;https://tmark.waus.app/static/mountains-valley.webp}
+}
+{details;#summary{Collapsed section}{p;Collapsed body}}
+}

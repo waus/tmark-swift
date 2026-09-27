@@ -1,0 +1,9 @@
+{document;
+#url{table}
+#title{Table}
+{table;
+#bordered{t}
+{{#header{t}Name}{Value}}
+{{A}{B}}
+}
+}

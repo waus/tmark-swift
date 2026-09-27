@@ -1,0 +1,9 @@
+{document;
+#url{media}
+#title{Media}
+{slideshow;
+#caption{#credit{Photo}Trip}
+{img;#has_spoiler{t}photo.jpg}
+{video;#caption{Clip}clip.mp4}
+}
+}

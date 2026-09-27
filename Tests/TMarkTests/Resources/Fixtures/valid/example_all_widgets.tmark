@@ -1,0 +1,58 @@
+{document;
+#url{https://example.com/tmark}
+#title{All widgets}
+{h;#s{3}tmark example}
+{h;#s{4}Inline formatting}
+{p;Plain text, {b;bold text}, {i;italic text}, {m;marked text}, {u;underlined text}, {s;struck text}, {spoiler;spoiler text}, {sub;sub} and {sup;sup}, {code;inline code}, {math;E=mc^2}, {datetime;#timezone{UTC}1767225600}, {a;#href{https://example.com}external link}, icon {icon;#alt{mountain}https://tmark.waus.app/static/mountains-summit.webp}.}
+{p;A paragraph can contain line breaks.
+This line is still in the same paragraph.}
+{pre;
+#language{go}
+package main
+
+func main() \{
+	println("Hello, tmark")
+\}
+}
+{math-block;
+\\int_0^1 x^2 dx = \\frac\{1\}\{3\}
+}
+{anchor;section-anchor}
+{q;#credit{Quote credit}{p;Blockquote}}
+{as;Pull quote}
+{list;
+{{p;unordered item one}}
+{{p;unordered item two}}
+}
+{list;
+{#order{1}{p;ordered item one}}
+{#order{2}{p;ordered item two}}
+{#type{checkbox}#checked{t}{p;checked task}}
+}
+{hr;}
+{map;#lat{52.520008}#lon{13.404954}#zoom{12}#caption{Map}}
+{img;#caption{Single image}https://tmark.waus.app/static/mountains-rockies.webp}
+{collage;
+#caption{Image collage}
+{img;https://tmark.waus.app/static/mountains-lake.webp}
+{img;https://tmark.waus.app/static/mountains-portrait.webp}
+{img;https://tmark.waus.app/static/mountains-summit.webp}
+}
+{slideshow;
+#caption{Image and video slideshow}
+{img;https://tmark.waus.app/static/mountains-wide.webp}
+{video;https://tmark.waus.app/static/Big_Buck_Bunny_720_10s_1MB.mp4}
+}
+{table;
+#caption{Table}
+#bordered{t}
+#striped{t}
+{{#header{t}Name}{#header{t}Role}{#header{t}#align{right}Score}}
+{{Alice}{Author}{#align{right}92}}
+{{Bob}{Reviewer}{#align{right}88}}
+}
+{details;#summary{Details}#open{t}{p;Details body}}
+{audio;#caption{Audio}https://tmark.waus.app/static/mountain-ambient.mp3}
+{h;#s{3}Links}
+{p;{a;#href{https://example.com/link}Example link}}
+}

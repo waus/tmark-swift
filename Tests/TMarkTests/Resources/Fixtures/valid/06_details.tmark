@@ -1,0 +1,12 @@
+{document;
+#url{details}
+#title{Details}
+{details;
+#summary{More}
+#open{t}
+{p;Hidden}
+{list;
+{#checked{f}{p;Task}}
+}
+}
+}

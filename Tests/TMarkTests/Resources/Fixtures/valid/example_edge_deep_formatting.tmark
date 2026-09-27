@@ -1,0 +1,7 @@
+{document;
+#url{https://example.com/tmark}
+#title{Edge deep formatting}
+{h;#s{2}Edge: deep formatting}
+{p;{b;{i;{m;deep but valid}}}}
+{p;long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-long-word-{code;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx}}
+}

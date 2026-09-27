@@ -1,0 +1,7 @@
+{document;
+#url{https://example.com/tmark}
+#title{Unknown block}
+{p;Paragraph before an unknown block.}
+{colorpicker;#from{ad34f1}#to{000000}My palete}
+{p;Paragraph after an unknown block.}
+}

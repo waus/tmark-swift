@@ -1,0 +1,13 @@
+{document;
+#url{https://example.com/tmark}
+#title{References and anchors}
+{h;#s{2}References and anchors}
+{anchor;intro}
+{p;Jump to {anchor-link;#name{footnotes}footnotes} or open {ref-link;#name{spec}the spec reference}.}
+{p;{ref;#name{spec}tmark format specification}}
+{hr;}
+{anchor;footnotes}
+{p;Footnote area with another {a;#href{https://example.com}external link}.}
+{h;#s{4}See also}
+{p;{a;#href{https://example.com/spec}External spec}}
+}

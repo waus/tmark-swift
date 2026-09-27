@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+._*
+
+# Swift Package Manager: generated files and local configuration
+.build/
+.swiftpm/
+
+# Xcode: build products and per-user settings
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# IDE settings
+.idea/
+.vscode/
+x
+# Keep Package.resolved and Xcode project files tracked.

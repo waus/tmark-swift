@@ -1,0 +1,7 @@
+{document;
+#url{https://example.com/post}
+#title{Fixture}
+#description{Round trip}
+{h;#s{2}Title}
+{p;Body {a;#href{https://example.com}link}}
+}

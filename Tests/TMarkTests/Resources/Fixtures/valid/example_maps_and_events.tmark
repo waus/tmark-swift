@@ -1,0 +1,8 @@
+{document;
+#url{https://example.com/tmark}
+#title{Maps and events}
+{h;#s{2}Maps and events}
+{p;Launch window: {datetime;#timezone{Europe/Moscow}1772323200}.}
+{map;#lat{55.755864}#lon{37.617698}#zoom{10}#caption{Moscow}}
+{map;#lat{-33.86882}#lon{151.20929}#caption{Sydney without explicit zoom}}
+}

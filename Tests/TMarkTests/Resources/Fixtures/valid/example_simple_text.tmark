@@ -1,0 +1,5 @@
+{document;
+#url{https://example.com/tmark}
+#title{Simple text}
+{p;A short paragraph with plain text only.}
+}

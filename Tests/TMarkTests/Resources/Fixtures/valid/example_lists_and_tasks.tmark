@@ -1,0 +1,21 @@
+{document;
+#url{https://example.com/tmark}
+#title{Lists and tasks}
+{h;#s{2}Lists and tasks}
+{list;
+{{p;Plain bullet}}
+{
+{p;Nested content in one list item}
+{list;
+{{p;Nested bullet A}}
+{{p;Nested bullet B}}
+}
+}
+}
+{list;
+{#order{10}{p;Start at ten}}
+{#order{11}{p;Continue at eleven}}
+{#type{checkbox}#checked{f}{p;Unchecked task}}
+{#type{checkbox}#checked{t}{p;Checked task}}
+}
+}

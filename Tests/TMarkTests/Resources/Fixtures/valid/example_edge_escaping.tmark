@@ -1,0 +1,17 @@
+{document;
+#url{https://example.com/tmark}
+#title{Edge escaping}
+{h;#s{2}Edge: escaping}
+{p;Reserved characters: \# \{ \} \\ should be escaped.}
+{p;Semicolon ; stays literal; newlines
+stay in text.}
+{p;{a;#href{https://example.com/search?q=\{tmark\}\#top}URL with braces and hash}}
+{pre;
+#language{tmark}
+\{document;
+\#url\{u\}
+\#title\{t\}
+\{p;raw-ish \# text\}
+\}
+}
+}

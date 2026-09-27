@@ -1,0 +1,20 @@
+{document;
+#url{https://example.com/tmark}
+#title{Media gallery}
+{h;#s{2}Media gallery}
+{img;#caption{Single image}https://tmark.waus.app/static/mountains-portrait.webp}
+{img;#caption{Single image with spoiler}#has_spoiler{t}https://tmark.waus.app/static/mountains-wide.webp}
+{collage;
+#caption{Image collage}
+{img;https://tmark.waus.app/static/mountains-summit.webp}
+{img;https://tmark.waus.app/static/mountains-teton.webp}
+{img;https://tmark.waus.app/static/mountains-portrait.webp}
+}
+{slideshow;
+#caption{Image and video slideshow}
+{img;https://tmark.waus.app/static/mountains-hero.webp}
+{video;#has_spoiler{t}https://tmark.waus.app/static/Big_Buck_Bunny_720_10s_1MB.mp4}
+{img;https://tmark.waus.app/static/mountains-rockies.webp}
+}
+{audio;#caption{Audio}https://tmark.waus.app/static/mountain-ambient.mp3}
+}

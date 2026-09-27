@@ -1,0 +1,24 @@
+{document;
+#url{https://example.com/tmark}
+#title{Math and code}
+{h;#s{2}Math and code}
+{p;Inline formula {math;\\sqrt\{a^2+b^2\}} and {code;const ok = true}.}
+{math-block;
+\\sum_\{i=1\}^\{n\} i = \\frac\{n(n+1)\}\{2\}
+}
+{pre;
+#language{go}
+type Example struct \{
+	Name string `json:"name"`
+\}
+
+func (e Example) Empty() bool \{
+	return e.Name == ""
+\}
+}
+{pre;
+line with \#hash
+line with \{braces\}
+line with backslash \\\\
+}
+}
