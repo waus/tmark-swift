@@ -10,6 +10,7 @@ struct ExampleDocument: Identifiable {
     var title: String { document.title }
 }
 
+@MainActor
 func loadExamples() async throws -> [ExampleDocument] {
     let baseURL = URL(string: "https://tmark.waus.app/examples/")!
     let filenames = [
