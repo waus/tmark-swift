@@ -54,6 +54,16 @@ import Testing
     #expect(try marshal(try #require(unmarshal(slideshow) as? Slideshow)) == slideshow)
 }
 
+@Test func videoPreviewAndLoopRoundTrip() throws {
+    let encoded = "{video;#preview{https://example.com/cover.png}#loop{t}clip.mp4}"
+    let video = try #require(unmarshal(encoded) as? VideoNode)
+    #expect(video.preview == "https://example.com/cover.png")
+    #expect(video.loop)
+    #expect(video.src == "clip.mp4")
+    #expect(try marshal(video) == encoded)
+    #expect(try marshal(VideoNode(src: "clip.mp4")) == "{video;clip.mp4}")
+}
+
 @Test func validFixturesRoundTripIgnoringFinalNewline() throws {
     for path in try fixtureFiles("valid", suffix: ".tmark") {
         let source = try String(contentsOfFile: path, encoding: .utf8)

@@ -140,11 +140,11 @@ public struct TmarkBlockView: View {
         case let v as TMark.Table:
             TmarkTableView(table: v)
         case let v as ImageNode:
-            TmarkMediaView(kind: "Image", src: v.src, caption: v.caption, hasSpoiler: v.hasSpoiler)
+            TmarkMediaView(kind: .image, src: v.src, caption: v.caption, hasSpoiler: v.hasSpoiler)
         case let v as VideoNode:
-            TmarkMediaView(kind: "Video", src: v.src, caption: v.caption, hasSpoiler: v.hasSpoiler)
+            TmarkMediaView(kind: .video(preview: v.preview, loop: v.loop), src: v.src, caption: v.caption, hasSpoiler: v.hasSpoiler)
         case let v as AudioNode:
-            TmarkMediaView(kind: "Audio", src: v.src, caption: v.caption)
+            TmarkMediaView(kind: .audio, src: v.src, caption: v.caption)
         case let v as MapBlock:
             VStack(spacing: 6) {
                 TmarkMapView(map: v)
@@ -195,9 +195,7 @@ public struct RichTextView: View {
             .task(id: iconSources(nodes)) {
                 for src in iconSources(nodes) where inlineIcons[src] == nil {
                     guard let url = remoteURL(src),
-                          let (data, _) = try? await URLSession.shared.data(from: url),
-                          MediaFormats.allowsImage(data),
-                          let image = PlatformImage(data: data)
+                          let image = try? await loadAllowedImage(url)
                     else { continue }
                     inlineIcons[src] = image
                 }
@@ -209,12 +207,8 @@ private struct TmarkMapView: View {
     var map: MapBlock
 
     var body: some View {
-        let place = MapPlace(
-            name: "Center",
-            coordinate: CLLocationCoordinate2D(latitude: map.lat, longitude: map.lon)
-        )
         Map(initialPosition: .region(region(for: map))) {
-            Marker(place.name, coordinate: place.coordinate)
+            Marker("Center", coordinate: CLLocationCoordinate2D(latitude: map.lat, longitude: map.lon))
         }
         .frame(height: 280)
     }
@@ -227,12 +221,6 @@ private struct TmarkMapView: View {
             span: MKCoordinateSpan(latitudeDelta: delta, longitudeDelta: delta)
         )
     }
-}
-
-private struct MapPlace: Identifiable {
-    let id = UUID()
-    let name: String
-    let coordinate: CLLocationCoordinate2D
 }
 
 private struct CodeBlock: View {
@@ -333,8 +321,22 @@ private struct TmarkDetailsView: View {
     }
 }
 
+private enum MediaKind {
+    case image
+    case video(preview: String, loop: Bool)
+    case audio
+
+    var label: String {
+        switch self {
+        case .image: "Image"
+        case .video: "Video"
+        case .audio: "Audio"
+        }
+    }
+}
+
 private struct TmarkMediaView: View {
-    var kind: String
+    var kind: MediaKind
     var src: String
     var caption: Caption?
     var hasSpoiler = false
@@ -369,15 +371,17 @@ private struct TmarkMediaView: View {
 
     @ViewBuilder
     private var media: some View {
-        if kind == "Image", let url = remoteURL(src) {
-            AllowedImageView(url: url)
-        } else if kind == "Video", let url = remoteURL(src) {
-            PlayerView(url: url)
-                .aspectRatio(16 / 9, contentMode: .fit)
-        } else if kind == "Audio", let url = remoteURL(src) {
-            AudioPlayerView(url: url)
+        if let url = remoteURL(src) {
+            switch kind {
+            case .image:
+                AllowedImageView(url: url)
+            case let .video(preview, loop):
+                TmarkVideoView(url: url, preview: preview, loop: loop)
+            case .audio:
+                AudioPlayerView(url: url)
+            }
         } else {
-            MediaPlaceholder(text: "\(kind): \(src)")
+            MediaPlaceholder(text: "\(kind.label): \(src)")
         }
     }
 }
@@ -401,16 +405,9 @@ private struct AllowedImageView: View {
             image = nil
             message = nil
             do {
-                let (data, response) = try await URLSession.shared.data(from: url)
-                guard let response = response as? HTTPURLResponse,
-                      (200..<300).contains(response.statusCode) else { throw URLError(.badServerResponse) }
-                try Task.checkCancellation()
-                guard MediaFormats.allowsImage(data) else {
-                    message = "Unsupported image format"
-                    return
-                }
-                guard let decoded = PlatformImage(data: data) else { throw URLError(.cannotDecodeContentData) }
-                image = decoded
+                image = try await loadAllowedImage(url)
+            } catch ImageLoadError.unsupportedFormat {
+                message = "Unsupported image format"
             } catch {
                 guard !Task.isCancelled else { return }
                 message = "Image load error: \(error.localizedDescription)"
@@ -431,17 +428,163 @@ private struct MediaPlaceholder: View {
     }
 }
 
-private struct PlayerView: View {
-    let player: AVPlayer
+private struct TmarkVideoView: View {
+    var url: URL
+    var preview: String
+    var loop: Bool
+    @State private var image: PlatformImage?
+    @State private var error: String?
+    @State private var loopPlayer: AVQueuePlayer?
+    @State private var looper: AVPlayerLooper?
+    @State private var downloadedFile: URL?
+    @State private var modalPlayer: AVPlayer?
+    @State private var showingPlayer = false
 
-    init(url: URL) {
-        player = AVPlayer(url: url)
+    private var ratio: CGFloat {
+        guard let image, image.size.height > 0 else { return 16 / 9 }
+        return image.size.width / image.size.height
     }
 
     var body: some View {
-        VideoPlayer(player: player)
+        ZStack {
+            if let loopPlayer {
+                SilentVideoSurface(player: loopPlayer)
+            } else if let image {
+                inlineImage(image).resizable().scaledToFit()
+            } else if let error {
+                MediaPlaceholder(text: error)
+            } else {
+                ProgressView()
+            }
+            if !loop, image != nil {
+                Button {
+                    modalPlayer = AVPlayer(url: url)
+                    showingPlayer = true
+                } label: {
+                    Image(systemName: "play.fill")
+                        .font(.title)
+                        .foregroundStyle(.white)
+                        .padding(18)
+                        .background(.black.opacity(0.65), in: Circle())
+                }
+                .accessibilityLabel("Play video")
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .aspectRatio(ratio, contentMode: .fit)
+        .task(id: "\(url.absoluteString)|\(preview)|\(loop)") {
+            stopLoop()
+            image = nil
+            error = nil
+            guard let previewURL = remoteURL(preview) else {
+                error = "Video preview unavailable"
+                return
+            }
+            do {
+                image = try await loadAllowedImage(previewURL)
+            } catch {
+                if !Task.isCancelled { self.error = "Video preview error: \(error.localizedDescription)" }
+            }
+        }
+        .task(id: image != nil && loop) {
+            if image != nil && loop { await startLoop() }
+        }
+        .onDisappear {
+            stopLoop()
+            modalPlayer?.pause()
+            modalPlayer = nil
+        }
+        .sheet(isPresented: $showingPlayer, onDismiss: {
+            modalPlayer?.pause()
+            modalPlayer = nil
+        }) {
+            if let modalPlayer {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button("Close") { showingPlayer = false }
+                    }
+                    VideoPlayer(player: modalPlayer)
+                }
+                .padding()
+                .frame(minWidth: 320, minHeight: 260)
+                .onAppear { modalPlayer.play() }
+                .onDisappear { modalPlayer.pause() }
+            }
+        }
+    }
+
+    private func startLoop() async {
+        do {
+            let (temporaryURL, response) = try await URLSession.shared.download(from: url)
+            guard let response = response as? HTTPURLResponse,
+                  (200..<300).contains(response.statusCode) else { throw URLError(.badServerResponse) }
+            try Task.checkCancellation()
+            let localURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString)
+                .appendingPathExtension(url.pathExtension.isEmpty ? "mp4" : url.pathExtension)
+            try FileManager.default.moveItem(at: temporaryURL, to: localURL)
+            guard !Task.isCancelled else {
+                try? FileManager.default.removeItem(at: localURL)
+                return
+            }
+            let player = AVQueuePlayer()
+            player.isMuted = true
+            let repeating = AVPlayerLooper(player: player, templateItem: AVPlayerItem(url: localURL))
+            downloadedFile = localURL
+            looper = repeating
+            loopPlayer = player
+            player.play()
+        } catch {
+            // Keep the preview visible if the loop cannot be downloaded.
+        }
+    }
+
+    private func stopLoop() {
+        loopPlayer?.pause()
+        loopPlayer = nil
+        looper = nil
+        if let downloadedFile { try? FileManager.default.removeItem(at: downloadedFile) }
+        downloadedFile = nil
     }
 }
+
+#if os(macOS)
+private struct SilentVideoSurface: NSViewRepresentable {
+    var player: AVPlayer
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer = AVPlayerLayer(player: player)
+        (view.layer as? AVPlayerLayer)?.videoGravity = .resizeAspect
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        (view.layer as? AVPlayerLayer)?.player = player
+    }
+}
+#else
+private final class PlayerLayerView: UIView {
+    override static var layerClass: AnyClass { AVPlayerLayer.self }
+    var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+}
+
+private struct SilentVideoSurface: UIViewRepresentable {
+    var player: AVPlayer
+
+    func makeUIView(context: Context) -> PlayerLayerView {
+        let view = PlayerLayerView()
+        view.playerLayer.videoGravity = .resizeAspect
+        return view
+    }
+
+    func updateUIView(_ view: PlayerLayerView, context: Context) {
+        view.playerLayer.player = player
+    }
+}
+#endif
 
 private struct AudioPlayerView: View {
     var url: URL
@@ -690,15 +833,15 @@ private struct TmarkCollageView: View {
         .task(id: children.map(gallerySource)) {
             resolvedRatios = [:]
             for node in children {
-                guard let image = node as? ImageNode,
-                      resolvedRatios[image.src] == nil,
-                      let url = remoteURL(image.src),
-                      let (data, _) = try? await URLSession.shared.data(from: url),
-                      MediaFormats.allowsImage(data),
-                      let loaded = PlatformImage(data: data),
-                      loaded.size.height > 0
+                let source: String? = if let image = node as? ImageNode { image.src }
+                    else if let video = node as? VideoNode { video.preview }
+                    else { nil }
+                guard let source, !source.isEmpty,
+                      resolvedRatios[source] == nil,
+                      let url = remoteURL(source),
+                      let loaded = try? await loadAllowedImage(url)
                 else { continue }
-                resolvedRatios[image.src] = min(max(loaded.size.width / loaded.size.height, 0.2), 5)
+                resolvedRatios[source] = min(max(loaded.size.width / loaded.size.height, 0.2), 5)
             }
         }
     }
@@ -993,7 +1136,7 @@ private func galleryRatios(
 
 private func gallerySource(_ node: any GalleryNode) -> String {
     if let image = node as? ImageNode { return image.src }
-    if let video = node as? VideoNode { return video.src }
+    if let video = node as? VideoNode { return video.preview }
     return ""
 }
 
@@ -1027,9 +1170,9 @@ private struct GalleryItemView: View {
 
     var body: some View {
         if let image = node as? ImageNode {
-            TmarkMediaView(kind: "Image", src: image.src, caption: image.caption, hasSpoiler: image.hasSpoiler)
+            TmarkMediaView(kind: .image, src: image.src, caption: image.caption, hasSpoiler: image.hasSpoiler)
         } else if let video = node as? VideoNode {
-            TmarkMediaView(kind: "Video", src: video.src, caption: video.caption, hasSpoiler: video.hasSpoiler)
+            TmarkMediaView(kind: .video(preview: video.preview, loop: video.loop), src: video.src, caption: video.caption, hasSpoiler: video.hasSpoiler)
         } else {
             EmptyView()
         }
@@ -1067,7 +1210,12 @@ private struct TmarkTableView: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            SpanTable(table: table)
+            let grid = TableLayout(rows: table.rows)
+            TableCellsLayout(grid: grid) {
+                ForEach(Array(grid.entries.enumerated()), id: \.offset) { _, entry in
+                    TableCellView(cell: entry.cell, striped: table.striped && entry.row % 2 == 1, bordered: table.bordered)
+                }
+            }
             if !table.caption.isEmpty {
                 CaptionLines(Caption(text: table.caption))
             }
@@ -1075,34 +1223,51 @@ private struct TmarkTableView: View {
     }
 }
 
-private struct SpanTable: View {
-    var table: TMark.Table
+private struct TableCellsLayout: Layout, @unchecked Sendable {
+    let grid: TableLayout
     #if os(macOS)
-    private let rowHeight: CGFloat = 34
+    private let minRowHeight: CGFloat = 34
     #else
-    private let rowHeight: CGFloat = 44
+    private let minRowHeight: CGFloat = 44
     #endif
 
-    var body: some View {
-        let layout = TableLayout(rows: table.rows)
-        GeometryReader { geometry in
-            let columnWidth = geometry.size.width / CGFloat(max(layout.columnCount, 1))
-            ZStack(alignment: .topLeading) {
-                ForEach(Array(layout.entries.enumerated()), id: \.offset) { _, entry in
-                    TableCellView(cell: entry.cell, striped: table.striped && entry.row % 2 == 1, bordered: table.bordered)
-                        .frame(
-                            width: columnWidth * CGFloat(entry.colspan),
-                            height: rowHeight * CGFloat(entry.rowspan),
-                            alignment: cellAlignment(entry.cell.align, entry.cell.valign)
-                        )
-                        .position(
-                            x: columnWidth * CGFloat(entry.column) + columnWidth * CGFloat(entry.colspan) / 2,
-                            y: rowHeight * CGFloat(entry.row) + rowHeight * CGFloat(entry.rowspan) / 2
-                        )
-                }
-            }
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? 0
+        return CGSize(width: width, height: rowHeights(subviews, width: width).reduce(0, +))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let heights = rowHeights(subviews, width: bounds.width)
+        let columnWidth = bounds.width / CGFloat(max(grid.columnCount, 1))
+        var offsets: [CGFloat] = [0]
+        var offset: CGFloat = 0
+        for height in heights { offset += height; offsets.append(offset) }
+        for (entry, subview) in zip(grid.entries, subviews) {
+            subview.place(
+                at: CGPoint(x: bounds.minX + CGFloat(entry.column) * columnWidth, y: bounds.minY + offsets[entry.row]),
+                anchor: .topLeading,
+                proposal: ProposedViewSize(
+                    width: columnWidth * CGFloat(entry.colspan),
+                    height: offsets[entry.row + entry.rowspan] - offsets[entry.row]
+                )
+            )
         }
-        .frame(height: rowHeight * CGFloat(layout.rowCount))
+    }
+
+    private func rowHeights(_ subviews: Subviews, width: CGFloat) -> [CGFloat] {
+        let columnWidth = width / CGFloat(max(grid.columnCount, 1))
+        var heights = Array(repeating: minRowHeight, count: grid.rowCount)
+        for (entry, subview) in zip(grid.entries, subviews) where entry.rowspan == 1 {
+            let needed = subview.sizeThatFits(ProposedViewSize(width: columnWidth * CGFloat(entry.colspan), height: nil)).height
+            heights[entry.row] = max(heights[entry.row], needed)
+        }
+        for (entry, subview) in zip(grid.entries, subviews) where entry.rowspan > 1 {
+            let rows = entry.row..<(entry.row + entry.rowspan)
+            let needed = subview.sizeThatFits(ProposedViewSize(width: columnWidth * CGFloat(entry.colspan), height: nil)).height
+            let extra = max(0, needed - heights[rows].reduce(0, +)) / CGFloat(entry.rowspan)
+            for row in rows { heights[row] += extra }
+        }
+        return heights
     }
 }
 
@@ -1323,27 +1488,28 @@ private func remoteURL(_ src: String) -> URL? {
     return url
 }
 
+private enum ImageLoadError: Error {
+    case unsupportedFormat
+}
+
+private func loadAllowedImage(_ url: URL) async throws -> PlatformImage {
+    let (data, response) = try await URLSession.shared.data(from: url)
+    guard let response = response as? HTTPURLResponse,
+          (200..<300).contains(response.statusCode) else { throw URLError(.badServerResponse) }
+    try Task.checkCancellation()
+    guard MediaFormats.allowsImage(data) else { throw ImageLoadError.unsupportedFormat }
+    guard let image = PlatformImage(data: data), image.size.height > 0 else {
+        throw URLError(.cannotDecodeContentData)
+    }
+    return image
+}
+
 private func richPlain(_ nodes: RichText) -> String {
     nodes.map {
         if let text = $0 as? TText { return text.text }
         if let code = $0 as? Code { return code.text }
         if let date = $0 as? DateTimeNode { return formatLocalDateTime(date.unix) }
-        let children: RichText? = switch $0 {
-        case let v as TMark.Link: v.children
-        case let v as AnchorLink: v.children
-        case let v as Reference: v.children
-        case let v as ReferenceLink: v.children
-        case let v as Bold: v.children
-        case let v as Italic: v.children
-        case let v as Marked: v.children
-        case let v as Underline: v.children
-        case let v as Strikethrough: v.children
-        case let v as Spoiler: v.children
-        case let v as Subscript: v.children
-        case let v as Superscript: v.children
-        default: nil
-        }
-        if let children { return richPlain(children) }
+        if let children = richChildren($0) { return richPlain(children) }
         return ""
     }.joined()
 }
@@ -1354,22 +1520,7 @@ private func iconSources(_ nodes: RichText) -> [String] {
         if let icon = node as? Icon {
             sources.append(icon.src)
         }
-        let children: RichText? = switch node {
-        case let v as TMark.Link: v.children
-        case let v as AnchorLink: v.children
-        case let v as Reference: v.children
-        case let v as ReferenceLink: v.children
-        case let v as Bold: v.children
-        case let v as Italic: v.children
-        case let v as Marked: v.children
-        case let v as Underline: v.children
-        case let v as Strikethrough: v.children
-        case let v as Spoiler: v.children
-        case let v as Subscript: v.children
-        case let v as Superscript: v.children
-        default: nil
-        }
-        if let children {
+        if let children = richChildren(node) {
             sources.append(contentsOf: iconSources(children))
         }
     }
@@ -1381,26 +1532,29 @@ private func richHelp(_ nodes: RichText) -> String? {
         if let date = node as? DateTimeNode {
             return formatSourceDateTime(date.unix, timezone: date.timezone)
         }
-        let children: RichText? = switch node {
-        case let v as TMark.Link: v.children
-        case let v as AnchorLink: v.children
-        case let v as Reference: v.children
-        case let v as ReferenceLink: v.children
-        case let v as Bold: v.children
-        case let v as Italic: v.children
-        case let v as Marked: v.children
-        case let v as Underline: v.children
-        case let v as Strikethrough: v.children
-        case let v as Spoiler: v.children
-        case let v as Subscript: v.children
-        case let v as Superscript: v.children
-        default: nil
-        }
-        if let children, let help = richHelp(children) {
+        if let children = richChildren(node), let help = richHelp(children) {
             return help
         }
     }
     return nil
+}
+
+private func richChildren(_ node: any RichNode) -> RichText? {
+    switch node {
+    case let v as TMark.Link: v.children
+    case let v as AnchorLink: v.children
+    case let v as Reference: v.children
+    case let v as ReferenceLink: v.children
+    case let v as Bold: v.children
+    case let v as Italic: v.children
+    case let v as Marked: v.children
+    case let v as Underline: v.children
+    case let v as Strikethrough: v.children
+    case let v as Spoiler: v.children
+    case let v as Subscript: v.children
+    case let v as Superscript: v.children
+    default: nil
+    }
 }
 
 private func headerFont(_ size: Int) -> Font {

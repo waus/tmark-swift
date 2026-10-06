@@ -9,12 +9,12 @@ Requires Swift 6.0 or newer, iOS 17 or macOS 14.
 In Xcode, choose **File → Add Package Dependencies** and enter
 `https://github.com/waus/tmark-swift`.
 Select `TMark` for parsing and serialization, and add `TMarkSwiftUI` for rendering.
-Use a released version tag when available; before the first release, select a branch or commit.
+Select version `0.3.0`.
 
-For another Swift package, add this dependency after the first `0.1.0` release:
+For another Swift package, add this dependency:
 
 ```swift
-.package(url: "https://github.com/waus/tmark-swift.git", from: "0.1.0")
+.package(url: "https://github.com/waus/tmark-swift.git", from: "0.3.0")
 ```
 
 Then add the products your target needs:
@@ -53,6 +53,10 @@ struct DocumentView: View {
 }
 ```
 
+`Math` and `MathBlock` render as monospaced text by default. Applications can
+replace them with `.tmarkInlineRenderer` and `.tmarkBlockRenderer`.
+The example app shows both hooks.
+
 ## Example App
 
 Open `TMarkExampleApp/TMarkExampleApp.xcodeproj` in Xcode and run:
@@ -61,6 +65,7 @@ Open `TMarkExampleApp/TMarkExampleApp.xcodeproj` in Xcode and run:
 - `TMarkExampleiOS` for iPhone simulator
 
 The app uses the same SwiftUI source for both platforms and local package products.
+Its deployment targets are macOS 15 and iOS 18.
 It downloads the fixed list of examples from `https://tmark.waus.app/examples/`,
 so loading examples requires network access.
 
@@ -137,5 +142,3 @@ requested concrete type or protocol, including for externally registered nodes.
 
 Unknown tags throw in strict mode; `soft: true` preserves them as raw `Unknown`
 values. Known schemas still reject malformed fields and wrong node categories.
-
-

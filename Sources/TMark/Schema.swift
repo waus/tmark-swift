@@ -24,6 +24,8 @@ public struct FieldType<Value> {
         FieldType<Other>(
             read: { try decode(self.read($0, &$1, $2)) },
             write: { try self.write(encode($0), &$1) },
+            isEmpty: { (try? encode($0)).map(self.isEmpty) ?? false },
+            count: { (try? encode($0)).map(self.count) ?? 1 },
             fragments: { try self.fragments(encode($0), &$1) })
     }
 
@@ -32,7 +34,12 @@ public struct FieldType<Value> {
                           write: { value, writer in
                               guard let value else { return "" }
                               return try self.write(value, &writer)
-                          }, isEmpty: { $0 == nil })
+                          }, isEmpty: { $0 == nil },
+                          count: { $0.map(self.count) ?? 0 },
+                          fragments: { value, writer in
+                              guard let value else { return [] }
+                              return try self.fragments(value, &writer)
+                          })
     }
 }
 

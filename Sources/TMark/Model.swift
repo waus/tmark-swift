@@ -193,10 +193,14 @@ public struct ImageNode: BlockNode, GalleryNode {
 
 public struct VideoNode: BlockNode, GalleryNode {
     public var src: String
+    public var preview: String
+    public var loop: Bool
     public var caption: Caption?
     public var hasSpoiler: Bool
-    public init(src: String, caption: Caption? = nil, hasSpoiler: Bool = false) {
+    public init(src: String, preview: String = "", loop: Bool = false, caption: Caption? = nil, hasSpoiler: Bool = false) {
         self.src = src
+        self.preview = preview
+        self.loop = loop
         self.caption = caption
         self.hasSpoiler = hasSpoiler
     }
@@ -581,6 +585,8 @@ extension VideoNode: TmarkRegistered {
         NodeType("video", make: { VideoNode(src: "") }, fields: [
             TmarkField("caption", \.caption, FieldTypes.node(Caption.self).optional()),
             TmarkField("has_spoiler", \.hasSpoiler, FieldTypes.boolean),
+            TmarkField("preview", \.preview, FieldTypes.string),
+            TmarkField("loop", \.loop, FieldTypes.boolean),
             TmarkField(nil, \.src, FieldTypes.string),
         ])
     }

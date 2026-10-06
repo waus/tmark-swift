@@ -7,7 +7,7 @@ enum MediaFormats {
     static func allowsImage(_ data: Data) -> Bool {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
               let type = CGImageSourceGetType(source) as String? else { return false }
-        return ["public.jpeg", "public.png", "org.webmproject.webp", "public.avif", "public.jpeg-xl"].contains(type)
+        return ["public.jpeg", "public.png", "org.webmproject.webp", "public.avif"].contains(type)
     }
 
     static func allowsAudio(_ data: Data) -> Bool {
